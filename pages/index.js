@@ -1,11 +1,36 @@
 import Head from "next/head";
+import axios from "axios";
 import { useState } from "react";
 import styles from "./index.module.css";
 
 export default function Home() {
   const [animalInput, setAnimalInput] = useState("");
   const [result, setResult] = useState();
+  const [word, setWord] = useState('');
+  async function generateWord(event) {
+    event.preventDefault();
+    try {
+      const response = await fetch("/api/result", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ level: 1 }),
+      });
 
+      const data = await response.json();
+      if (response.status !== 200) {
+        throw data.error || new Error(`Request failed with status ${response.status}`);
+      }
+
+      setWord(data.result);
+    } catch(error) {
+      // Consider implementing your own error handling logic here
+      console.error(error);
+      alert(error.message);
+    }
+  }
+  ////////////////////////////////////
   async function onSubmit(event) {
     event.preventDefault();
     try {
@@ -14,7 +39,7 @@ export default function Home() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ animal: animalInput }),
+        body: JSON.stringify({ description: animalInput, word }),
       });
 
       const data = await response.json();
@@ -42,8 +67,7 @@ export default function Home() {
         <img src="/dog.png" className={styles.icon} />
         <h3>Name my pet</h3>
         <form onSubmit={onSubmit}>
-          <input
-            type="text"
+          <textarea
             name="animal"
             placeholder="Enter an animal"
             value={animalInput}
@@ -51,6 +75,8 @@ export default function Home() {
           />
           <input type="submit" value="Generate names" />
         </form>
+        <button className="btn" onClick={generateWord}>Get word</button>
+        <h3>{word}</h3>
         <div className={styles.result}>{result}</div>
       </main>
     </div>
